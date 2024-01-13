@@ -26,12 +26,12 @@ class Channel:
     def channel_id(self):
         return self.__channel_id
 
-    @channel_id.setter
-    def channel_id(self, channel_id):
-        if self.__channel_id == channel_id:
-            self.__channel_id = channel_id
-        else:
-            raise ValueError('Нельзя менять название канала')
+    # @channel_id.setter
+    # def channel_id(self, channel_id):
+    #     if self.__channel_id == channel_id:
+    #         self.__channel_id = channel_id
+    #     else:
+    #         raise ValueError('Нельзя менять название канала')
 
     def print_info(self):
         channel = self.youtube.channels().list(id=self.__channel_id, part='snippet,statistics').execute()
