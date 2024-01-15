@@ -74,52 +74,6 @@ class Channel:
         return self.subscriber_count > other.subscriber_count
 
 
-class Video:
-
-    def __init__(self, video):
-        """Инициализируем класс по id видео, также инициализируем
-        название, количество просмотров и лайков"""
-        api_key: str = os.getenv('YouTube_API_Key')
-        youtube = build('youtube', 'v3', developerKey=api_key)
-
-        try:
-            self.video = youtube.videos().list(id=video, part='snippet,contentDetails,statistics').execute()
-            self.video_id = self.video["items"][0]["id"]
-            self.video_title = self.video["items"][0]["snippet"]["title"]
-            self.video_views = self.video["items"][0]["statistics"]["viewCount"]
-            self.video_likes = self.video["items"][0]["statistics"]["likeCount"]
-        except IndexError:
-            self.video = video
-            self.video_id = None
-            self.video_title = None
-            self.video_views = None
-            self.video_likes = None
-
-    def __repr__(self):
-        """Получаем название канала в формате Youtube-канал: <название_канала>"""
-        return f"Youtube-канал: {self.video_title}"
-
-
-class PLVideo(Video):
-    def __init__(self, video, playlist):
-        """Инициализируем дочерний класс по id видео, и id плейлиста"""
-        super().__init__(video)
-        api_key: str = os.getenv('YOUTUBE_API_KEY')
-        self.youtube = build('youtube', 'v3', developerKey=api_key)
-        self.playlist = playlist
-        self.playlist_name = self.get_playlist_name()
-
-    def get_playlist_name(self):
-        """Получаем название плейлиста"""
-        self.playlist = self.youtube.playlists().list(id=self.playlist, part='snippet').execute()
-        self.playlist_name = self.playlist['items'][0]['snippet']['title']
-        return self.playlist_name
-
-    def __repr__(self):
-        """Переопределили метод репр в дочернем классе"""
-        return f"{self.video_title} ({self.playlist_name})"
-
-
 class PlayList:
     def __init__(self, playlist_id):
         """Инициализируем класс по id видео, также инициализируем
@@ -163,7 +117,6 @@ class PlayList:
                 likes = int(self.videos['items'][i]['statistics']['likeCount'])
                 id_ = self.videos['items'][i]['id']
         return f"https://www.youtube.com/watch?v={id_}"
-
 
 # if __name__ == '__main__':
 #     broken_video = Video('broken_video_id')
