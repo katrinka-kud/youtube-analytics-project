@@ -28,6 +28,9 @@ class Video:
         """Получаем название канала в формате Youtube-канал: <название_канала>"""
         return f"Youtube-канал: {self.video_title}"
 
+    def __str__(self):
+        return self.video_title
+
 
 class PLVideo(Video):
     def __init__(self, video, playlist):

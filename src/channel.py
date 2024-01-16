@@ -9,48 +9,34 @@ from googleapiclient.discovery import build
 
 class Channel:
     """Класс для ютуб-канала"""
-    api_key: str = os.getenv('YouTube_API_Key')
-    youtube = build('youtube', 'v3', developerKey=api_key)
 
     def __init__(self, channel_id):
         self.__channel_id = channel_id  # id канала
-        self.title = self.get_info().get('items')[0].get('snippet').get('title')  # название канала
-        self.description = self.get_info().get('items')[0].get('snippet').get('description')  # описание канала
-        self.subscriber_count = self.get_info().get('items')[0].get('statistics').get(
+        self.channel = self.get_servise().channels().list(id=self.__channel_id, part='snippet,statistics').execute()
+        self.title = self.channel.get('items')[0].get('snippet').get('title')  # название канала
+        self.description = self.channel.get('items')[0].get('snippet').get('description')  # описание канала
+        self.subscriber_count = self.channel.get('items')[0].get('statistics').get(
             'subscriberCount')  # количество подписчиков
-        self.video_count = self.get_info().get('items')[0].get('statistics').get('videoCount')  # количество видео
-        self.viewCount = self.get_info().get('items')[0].get('statistics').get(
+        self.video_count = self.channel.get('items')[0].get('statistics').get('videoCount')  # количество видео
+        self.viewCount = self.channel.get('items')[0].get('statistics').get(
             'viewCount')  # общее количество просмотров
 
     @property
     def channel_id(self):
         return self.__channel_id
 
-    # @channel_id.setter
-    # def channel_id(self, channel_id):
-    #     if self.__channel_id == channel_id:
-    #         self.__channel_id = channel_id
-    #     else:
-    #         raise ValueError('Нельзя менять название канала')
-
     def print_info(self):
-        channel = self.youtube.channels().list(id=self.__channel_id, part='snippet,statistics').execute()
         print(json.dumps(channel, indent=2, ensure_ascii=False))
-
-    def get_info(self):
-        """Получение информации о канале"""
-        channel = self.youtube.channels().list(id=self.__channel_id, part='snippet,statistics').execute()
-        return channel
 
     @property
     def url(self):
         """Записывает html адрес канала"""
-        return f"https://www.youtube.com/channel/{self.get_info().get('items')[0].get('id')}"
+        return f"https://www.youtube.com/channel/{self.__channel_id}"
 
     def to_json(self, title):
         """Записывает полученную информацию с сайта в json файл"""
         with open(title, 'w') as f:
-            json.dump(self.get_info(), f, indent=3)
+            json.dump(self.channel, f, indent=3)
 
     @classmethod
     def get_service(cls):
@@ -65,13 +51,19 @@ class Channel:
 
     def __len__(self):
         """Получаем количество видео"""
-        return len(self.subscriber_count)
+        return int(self.subscriber_count)
 
     def __add__(self, other):
-        return self.subscriber_count + other.subscriber_count
+        return int(self.subscriber_count) + int(other.subscriber_count)
+
+    def __sub__(self, other):
+        return int(self.subscriber_count) - int(other.subscriber_count)
 
     def __gt__(self, other):
-        return self.subscriber_count > other.subscriber_count
+        return int(self.subscriber_count) > int(other.subscriber_count)
+
+    def __ge__(self, other):
+        return int(self.subscriber_count) >= int(other.subscriber_count)
 
 
 class PlayList:
@@ -96,27 +88,24 @@ class PlayList:
 
     @property
     def total_duration(self):
-        duration_ = timedelta()
         total_duration_ = timedelta()
-        for i in range(len(self.videos) + 1):
-            iso_8601_duration = self.videos['items'][i]['contentDetails']['duration']
+        for video in self.videos['items']:
+            iso_8601_duration = video['contentDetails']['duration']
             duration_ = isodate.parse_duration(iso_8601_duration)
-            total_duration_ += duration_
-        return total_duration_
+            total_duration += duration
+        return total_duration
 
-    def total_seconds(self):
-        return self.total_duration.seconds
+    def show_best_video(self) -> str:
+        """Выводит ссылку на самое залайканное видео в плейлисте"""
+        max_likes = 0
+        video_id = ''
+        for video in self.videos['items']:
+            like_count = int(video['statistics']['likeCount'])
+            if like_count > max_likes:
+                max_likes = like_count
+                video_id = video['id']
 
-    def show_best_video(self):
-        videos = {}
-        id_ = None
-        likes = 0
-        for i in range(len(self.playlist_video) + 1):
-            videos[self.videos['items'][i]['statistics']['likeCount']] = self.playlist_video['items'][i]
-            if likes < int(self.videos['items'][i]['statistics']['likeCount']):
-                likes = int(self.videos['items'][i]['statistics']['likeCount'])
-                id_ = self.videos['items'][i]['id']
-        return f"https://www.youtube.com/watch?v={id_}"
+        return f"https://youtu.be/{video_id}"
 
 # if __name__ == '__main__':
 #     broken_video = Video('broken_video_id')
