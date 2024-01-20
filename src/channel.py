@@ -88,10 +88,10 @@ class PlayList:
 
     @property
     def total_duration(self):
-        total_duration_ = timedelta()
+        total_duration = timedelta()
         for video in self.videos['items']:
             iso_8601_duration = video['contentDetails']['duration']
-            duration_ = isodate.parse_duration(iso_8601_duration)
+            duration = isodate.parse_duration(iso_8601_duration)
             total_duration += duration
         return total_duration
 
